@@ -1,11 +1,14 @@
 <template>
   <ul>
-    <li><Button label="Layers" icon="pi pi-images"></Button></li>
+    <li>
+      <SplitButton label="Layers" icon="pi pi-plus" @click="_addLayer()"></SplitButton>
+    </li>
+
     <li>
       <Button
-        label="Image"
+        label="Change Image"
         icon="pi pi-image"
-        @click="changeBackgroundImage()"
+        @click="_changeBackgroundImage()"
       ></Button>
     </li>
   </ul>
@@ -13,14 +16,15 @@
 
 <script>
 import { defineComponent } from "vue";
-import { mapState } from "vuex";
+import { mapMutations, mapState } from "vuex";
 import * as THREE from "three";
 
 // import { PrimeIcons } from "primevue/api";
 import Button from "primevue/button";
+import SplitButton from "primevue/splitbutton";
 
 export default defineComponent({
-  components: { Button },
+  components: { Button, SplitButton },
 
   setup() {
     // const dockItems = [{ label: "Images", icon: PrimeIcons.IMAGES }];
@@ -33,10 +37,28 @@ export default defineComponent({
   computed: {
     ...mapState({ sphere: (state) => state.threeD.sphere }),
     ...mapState({ layers: (state) => state.threeD.layers }),
+    ...mapState({ camera: (state) => state.threeD.camera }),
+    ...mapState({ currentLayer: (state) => state.threeD.currentLayer }),
   },
 
   methods: {
-    changeBackgroundImage() {
+    ...mapMutations(["addLayer", "addEmptyLayer"]),
+
+    _addLayer() {
+      const material = new THREE.MeshBasicMaterial({
+        // map: texture,
+        color: 0xffffff,
+      });
+
+      this.sphere.material = material;
+
+      this.addEmptyLayer()
+
+      this.camera.position.set(0, 0, 10);
+      this.camera.lookAt(0, 0, 0);
+    },
+
+    _changeBackgroundImage() {
       const fileInput = document.createElement("input");
       fileInput.type = "file";
       fileInput.accept = "image/*";
@@ -47,13 +69,13 @@ export default defineComponent({
           const data = e.target.result;
           // console.log(this.sphere, data);
 
-          this.sphere.material.map = new THREE.TextureLoader().load(data);
-
-          this.layers.forEach((l) => {
-            if (l.visible) {
-              l.texture = this.sphere.material.map;
-            }
+          this.sphere.material = new THREE.MeshBasicMaterial({
+            map: new THREE.TextureLoader().load(data),
           });
+
+          this.currentLayer.image = data;
+
+          this.camera.position.set(0, 0, 0.01);
         };
 
         reader.readAsDataURL(fileInput.files[0]);
