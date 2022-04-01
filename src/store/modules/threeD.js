@@ -23,10 +23,24 @@ const mutations = {
         state.layers.push(layer)
     },
 
+    removeLayer(state, layer) {
+        for (let i = 0; i < state.layers.length; i++) {
+            const tmpLayer = state.layers[i]
+            if (tmpLayer == layer) {
+                state.layers.splice(i, 1)
+                break
+            }
+        }
+    },
+
     addEmptyLayer(state) {
         const newLayer = { index: state.layers.length }
         state.currentLayer = newLayer
         state.layers.push(newLayer)
+    },
+
+    setCurrentLayer(state, layer) {
+        state.currentLayer = layer
     }
 }
 
